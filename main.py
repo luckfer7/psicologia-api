@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from database.database import engine, Base, SessionLocal
 from models.paciente import Paciente
+from schemas.paciente import PacienteCreate
+from schemas.PacienteResponse import PacienteResponse
 
 app = FastAPI()
 
@@ -13,20 +15,28 @@ def home():
 
 
 @app.get("/pacientes")
-def mostrar_pacientes():
+def mostrar_pacientes(paciente: PacienteResponse):
     db = SessionLocal()
 
-    pacientes = db.query(Paciente).all() #Por baixo dos panos, é tipo SELCT FROM na tabela
+    pacientes = db.query(paciente(
+        nome=paciente.nome,
+        telefone=paciente.telefone,
+        observacoes=paciente.observacoes
+    )).all() #Por baixo dos panos, é tipo SELECT FROM na tabela
 
     return pacientes
 
 @app.post("/adicionar_pacientes")
-def criar_paciente():
+def criar_paciente(paciente: PacienteCreate):
+    #HERDA O PACIENTECREATE E JOGA A CLASSE PRA VARIAVEL EM MINUSCULO
     db = SessionLocal()
 
     novo_paciente = Paciente(
-        nome="Teste",
-        telefone="21994468609"
+        nome=paciente.nome,
+        telefone=paciente.telefone,
+        email=paciente.email,
+        data_nascimento=paciente.data_nascimento,
+        observacoes=paciente.observacoes
     )
 
     db.add(novo_paciente) #prepara a fila para salvar no banco
