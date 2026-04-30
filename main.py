@@ -14,17 +14,33 @@ def home():
     return {"mensagem": "API rodando!"}
 
 
-@app.get("/pacientes")
-def mostrar_pacientes(paciente: PacienteResponse):
+@app.get("/pacientes", response_model=list[PacienteResponse])
+def mostrar_pacientes():
     db = SessionLocal()
 
-    pacientes = db.query(paciente(
-        nome=paciente.nome,
-        telefone=paciente.telefone,
-        observacoes=paciente.observacoes
-    )).all() #Por baixo dos panos, é tipo SELECT FROM na tabela
-
+    pacientes = db.query(Paciente).all() #Por baixo dos panos, é tipo SELECT FROM na tabela
+    db.close()
     return pacientes
+
+@app.get("/pacientes/{paciente_id}", response_model=PacienteResponse)
+def buscar_paciente(paciente_id: int):
+    db = SessionLocal()
+
+    paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
+
+    db.close
+
+    return paciente
+
+@app.get("/pacientes{paciente_nome}", response_model=PacienteResponse)
+def buscar_paciente_pelo_nome(paciente_nome: str):
+    db = SessionLocal()
+
+    nome_do_paciente = db.query(Paciente).filter(Paciente.nome == paciente_nome).first()
+
+    db.close()
+
+    return nome_do_paciente
 
 @app.post("/adicionar_pacientes")
 def criar_paciente(paciente: PacienteCreate):
