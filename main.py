@@ -86,3 +86,21 @@ def atualizar_paciente(paciente_id: int, dados: PacienteUpdate):
     db.close()
 
     return paciente
+
+@app.delete("/pacientes/{paciente_id}")
+def deletar_paciente(paciente_id: int):
+    db = SessionLocal()
+
+    #Primeiro busca o paciente
+    paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
+
+    if not paciente:
+        db.close()
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
+
+    db.delete(paciente)
+    db.commit()
+
+    db.close()
+
+    return {"mensagem": "Paciente deletado com sucesso"}
