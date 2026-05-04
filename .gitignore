@@ -1,0 +1,33 @@
+# Ambiente virtual
+venv/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Banco de dados
+*.db
+
+# Logs
+*.log
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Testes / coverage
+.coverage
+htmlcov/
+
+# Arquivos temporários
+*.swp
+*.tmp
