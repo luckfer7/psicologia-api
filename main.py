@@ -3,6 +3,8 @@ from database.database import engine, Base, SessionLocal
 from models.paciente import Paciente
 from schemas.paciente import PacienteCreate
 from schemas.PacienteResponse import PacienteResponse
+from schemas.paciente import PacienteUpdate
+from fastapi import HTTPException
 
 app = FastAPI()
 
@@ -60,3 +62,27 @@ def criar_paciente(paciente: PacienteCreate):
     db.refresh(novo_paciente) #Responsável por sincronizar com o banco
 
     return novo_paciente
+
+@app.put("/pacientes/{paciente_id}")
+def atualizar_paciente(paciente_id: int, dados: PacienteUpdate):
+    db = SessionLocal()
+
+    paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
+
+    if not paciente:
+        db.close()
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
+    
+    for campo, valor in dados.model_dump(exclude_unset=True).items():
+        #só pega os campos que vieram no JSON
+
+        setattr(paciente, campo, valor)
+        #atualiza dinamicamente
+    
+
+    db.commit()
+    db.refresh(paciente)
+
+    db.close()
+
+    return paciente
