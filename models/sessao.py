@@ -4,8 +4,8 @@ from sqlalchemy import Column, Date, String, Integer, DateTime, ForeignKey
 from database.database import Base
 
 class Sessao (Base):
-    __tablename__ = "sessao"
-
+    __tablename__ = "Sessao"
+    id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id"))
     data = Column(Date)
     horario = Column(DateTime)

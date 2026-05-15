@@ -4,6 +4,10 @@ from models.paciente import Paciente
 from schemas.paciente import PacienteCreate
 from schemas.PacienteResponse import PacienteResponse
 from schemas.paciente import PacienteUpdate
+
+from schemas.sessao import SessaoCreate
+from models.sessao import Sessao
+
 from fastapi import HTTPException
 
 app = FastAPI()
@@ -104,3 +108,21 @@ def deletar_paciente(paciente_id: int):
     db.close()
 
     return {"mensagem": "Paciente deletado com sucesso"}
+
+#--------------------------------------------------------------------------------------------------------------------------
+
+@app.post("/criar_sessao")
+def criar_sessao(sessao: SessaoCreate):
+    db = SessionLocal()
+
+    nova_sessao = Sessao(
+        data=sessao.data,
+        horario=sessao.horario,
+        anotacao=sessao.anotacao
+    )
+
+    db.add(nova_sessao)
+    db.commit()
+    db.refresh()
+
+    return nova_sessao

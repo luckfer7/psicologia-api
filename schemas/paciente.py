@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import date
-from sessao import sessaoCreate
 class PacienteCreate(BaseModel):
     nome: str
     telefone: Optional[str] = None
