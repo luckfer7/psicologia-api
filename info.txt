@@ -2,3 +2,5 @@ http://127.0.0.1:8000/docs = tem swagger
 
 venv\Scripts\activate = pra ativar o ambiente antes de rodar a api
 uvicorn main:app --reload = roda a api
+
+python -m uvicorn main:app --reload 
