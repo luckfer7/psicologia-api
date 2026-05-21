@@ -10,3 +10,4 @@ class Sessao (Base):
     data = Column(Date)
     horario = Column(DateTime)
     anotacao = Column(String)
+    status = Column(String)

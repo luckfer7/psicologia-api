@@ -116,8 +116,7 @@ def criar_sessao(sessao: SessaoCreate):
     db = SessionLocal()
 
     nova_sessao = Sessao(
-        data=sessao.data,
-        horario=sessao.horario,
+        data_horario=sessao.data_horario,
         anotacao=sessao.anotacao
     )
 
