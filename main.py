@@ -34,7 +34,7 @@ def buscar_paciente(paciente_id: int):
 
     paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
 
-    db.close
+    db.close()
 
     return paciente
 
@@ -117,11 +117,17 @@ def criar_sessao(sessao: SessaoCreate):
 
     nova_sessao = Sessao(
         data_horario=sessao.data_horario,
-        anotacao=sessao.anotacao
+        anotacao=sessao.anotacao,
+        status=sessao.status,
+        paciente=sessao.paciente_id
+
     )
 
     db.add(nova_sessao)
     db.commit()
-    db.refresh()
+    db.refresh(nova_sessao)
 
     return nova_sessao
+
+#------------------------------------------------------------------
+

@@ -17,5 +17,5 @@ class PagamentoForma (str, Enum):
     debito = "debito"
 
 class PagamentoStatus (bool):
-    pago = False
-    pendente = True
+    pago = "pago"
+    pendente = "pendente"
