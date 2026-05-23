@@ -1,4 +1,4 @@
-from decimal import Decimal
+
 from sqlalchemy import Column, String, Integer, ForeignKey, Numeric
 from database.database import Base
 

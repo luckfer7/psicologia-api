@@ -38,7 +38,7 @@ def buscar_paciente(paciente_id: int):
 
     return paciente
 
-@app.get("/pacientes{paciente_nome}", response_model=PacienteResponse)
+@app.get("/pacientes/{paciente_nome}", response_model=PacienteResponse)
 def buscar_paciente_pelo_nome(paciente_nome: str):
     db = SessionLocal()
 
