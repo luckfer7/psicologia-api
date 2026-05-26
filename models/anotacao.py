@@ -7,4 +7,4 @@ class Anotacao(Base):
     id = Column(Integer, primary_key=True, index=True)
     texto = Column(String)
     data_criacao = Column(DateTime, default=datetime.utcnow)
-    sessao_id = Column(Integer, ForeignKey("sessoes.id"))
+    sessao_id = Column(Integer, ForeignKey("Sessao.id"))
