@@ -8,6 +8,9 @@ from schemas.paciente import PacienteUpdate
 from schemas.sessao import SessaoCreate
 from models.sessao import Sessao
 
+from schemas.anotacao import AnotacaoCreate
+from models.anotacao import Anotacao
+
 from fastapi import HTTPException
 
 app = FastAPI()
@@ -131,3 +134,21 @@ def criar_sessao(sessao: SessaoCreate):
 
 #------------------------------------------------------------------
 
+@app.post("/anotacoes")
+def criar_anotacao(anotacao: AnotacaoCreate):
+    db = SessionLocal()
+
+    nova_anotacao = Anotacao(
+        texto=anotacao.texto,
+        sessao_id=anotacao.sessao_id
+    )
+
+    db.add(nova_anotacao)
+
+    db.commit()
+
+    db.refresh(nova_anotacao)
+
+    db.close()
+
+    return nova_anotacao
