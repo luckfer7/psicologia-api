@@ -120,7 +120,7 @@ def criar_sessao(sessao: SessaoCreate):
 
     nova_sessao = Sessao(
         data_horario=sessao.data_horario,
-        anotacao=sessao.anotacao,
+        # anotacao=sessao.anotacao,
         status=sessao.status,
         paciente=sessao.paciente_id
 
@@ -152,3 +152,16 @@ def criar_anotacao(anotacao: AnotacaoCreate):
     db.close()
 
     return nova_anotacao
+
+#Aqui se busca a anotação por sessao
+@app.get("/sessoes/{id}/anotacoes")
+def mostrar_anotacoes(sessao_id: int):
+    db = SessionLocal()
+
+    anotacao = db.query(Anotacao).filter(Anotacao.sessao_id == id).all()
+
+    db.close()
+
+    return anotacao
+
+

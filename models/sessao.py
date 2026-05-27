@@ -8,5 +8,5 @@ class Sessao (Base):
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("pacientes.id"))
     data_horario = Column(DateTime)
-    anotacao = Column(String)
+    # anotacao = Column(String)
     status = Column(String)

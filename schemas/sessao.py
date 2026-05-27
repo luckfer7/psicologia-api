@@ -5,7 +5,7 @@ from enum import Enum
 
 class SessaoCreate(BaseModel):
     data_horario: datetime
-    anotacao: str 
+    # anotacao: str 
     paciente_id: int
     status: StatusSessao
 
