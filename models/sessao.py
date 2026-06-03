@@ -1,6 +1,6 @@
 #data, horario, assunto abordado / anotações
 
-from sqlalchemy import Column, Date, String, Integer, DateTime, ForeignKey
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey
 from database.database import Base
 
 class Sessao (Base):

@@ -121,8 +121,10 @@ def criar_sessao(sessao: SessaoCreate):
     nova_sessao = Sessao(
         data_horario=sessao.data_horario,
         # anotacao=sessao.anotacao,
-        status=sessao.status,
-        paciente=sessao.paciente_id
+        #status=sessao.status,
+        status=sessao.status.value,
+        #paciente=sessao.paciente_id
+        paciente_id=sessao.paciente_id
 
     )
 
