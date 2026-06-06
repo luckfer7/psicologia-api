@@ -160,7 +160,7 @@ def criar_anotacao(anotacao: AnotacaoCreate):
 def mostrar_anotacoes(sessao_id: int):
     db = SessionLocal()
 
-    anotacao = db.query(Anotacao).filter(Anotacao.sessao_id == id).all()
+    anotacao = db.query(Anotacao).filter(Anotacao.sessao_id == sessao_id).all()
 
     db.close()
 
