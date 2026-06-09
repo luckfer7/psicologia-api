@@ -22,7 +22,7 @@ Base.metadata.create_all(bind=engine)
 def home():
     return {"mensagem": "API rodando!"}
 
-
+#----------------ENDPOINTS PARA PACIENTES-------------------------------
 @app.get("/pacientes", response_model=list[PacienteResponse])
 def mostrar_pacientes():
     db = SessionLocal()
@@ -112,7 +112,16 @@ def deletar_paciente(paciente_id: int):
 
     return {"mensagem": "Paciente deletado com sucesso"}
 
-#--------------------------------------------------------------------------------------------------------------------------
+@app.get("/pacientes{paciente_id}/sessoes")
+def sessoes_pacientes(paciente_id: int):
+    db = SessionLocal()
+
+    sessoes_do_paciente = db.query(Sessao).filter(Sessao.paciente_id == paciente_id).all()
+
+    db.close()
+
+    return sessoes_do_paciente
+#---------------------------ENDPOINTS PARA SESSOES---------------------------------
 
 @app.post("/criar_sessao")
 def criar_sessao(sessao: SessaoCreate):
