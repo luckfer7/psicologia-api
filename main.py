@@ -13,6 +13,8 @@ from models.anotacao import Anotacao
 
 from fastapi import HTTPException
 
+from sqlalchemy.orm import joinedload
+
 app = FastAPI()
 
 #Aqui, cria-se as tabelas
@@ -27,7 +29,11 @@ def home():
 def mostrar_pacientes():
     db = SessionLocal()
 
-    pacientes = db.query(Paciente).all() #Por baixo dos panos, é tipo SELECT FROM na tabela
+    pacientes = (
+        db.query(Paciente)
+        .options(joinedload(Paciente.sessoes))
+        .all()
+    ) #Por baixo dos panos, é tipo SELECT *FROM pacientes LEFT JOIN sessoes
     db.close()
     return pacientes
 
@@ -112,7 +118,7 @@ def deletar_paciente(paciente_id: int):
 
     return {"mensagem": "Paciente deletado com sucesso"}
 
-@app.get("/pacientes{paciente_id}/sessoes")
+@app.get("/pacientes/{paciente_id}/sessoes")
 def sessoes_pacientes(paciente_id: int):
     db = SessionLocal()
 
