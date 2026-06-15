@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from database.database import Base
 
@@ -6,6 +6,12 @@ class Paciente(Base):
     __tablename__ = "pacientes"
 
     id = Column(Integer, primary_key=True, index=True)
+
+    usuario_id = Column(
+        Integer,
+        ForeignKey("usuarios.id")
+    )
+
     nome = Column(String, nullable=False)
     data_nascimento = Column(Date)
     telefone = Column(String)
