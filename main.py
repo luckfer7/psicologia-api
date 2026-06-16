@@ -11,6 +11,11 @@ from models.sessao import Sessao
 from schemas.anotacao import AnotacaoCreate
 from models.anotacao import Anotacao
 
+
+from models.usuario import Usuario
+from schemas.usuario import UsuarioCreate
+from utils.seguranca import gerar_hash
+
 from fastapi import HTTPException
 
 from sqlalchemy.orm import joinedload
@@ -181,4 +186,25 @@ def mostrar_anotacoes(sessao_id: int):
 
     return anotacao
 
+#Endpoint de autenticação
+@app.post("/auth/register")
+def registrar_usuario(usuario: UsuarioCreate):
+    db = SessionLocal()
 
+    novo_usuario = Usuario(
+        nome=usuario.nome,
+        email=usuario.email,
+        senha_hash=gerar_hash(usuario.senha)
+    )
+
+    db.add(novo_usuario)
+
+    db.commit()
+
+    db.refresh(novo_usuario)
+
+    db.close()
+
+    return {
+        "mensagem": "Usuário criado com sucesso"
+    }
