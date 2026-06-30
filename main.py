@@ -16,6 +16,10 @@ from models.usuario import Usuario
 from schemas.usuario import UsuarioCreate
 from utils.seguranca import gerar_hash
 
+from schemas.login import LoginRequest
+from utils.jwt import criar_token
+from utils.seguranca import verificar_senha
+
 from fastapi import HTTPException
 
 from sqlalchemy.orm import joinedload
@@ -207,4 +211,49 @@ def registrar_usuario(usuario: UsuarioCreate):
 
     return {
         "mensagem": "Usuário criado com sucesso"
+    }
+
+#Endpoint de login
+@app.post("/auth/login")
+def login(dados: LoginRequest):
+    db = SessionLocal()
+
+    usuario = (
+        db.query(Usuario)
+        .filter(Usuario.email == dados.email)
+        .first()
+    )
+
+    if not usuario:
+        db.close()
+
+        raise HTTPException(
+            status_code=401,
+            detail="Email ou senha inválido."
+        )
+    
+    senha_valida = verificar_senha(
+        dados.senha,
+        usuario.senha_hash
+    )
+
+    if not senha_valida:
+        db.close()
+
+        raise HTTPException(
+            status_code=401,
+            detail="Email ou senha inválidos."
+        )
+    
+    token = criar_token(
+        {
+            "sub": str(usuario.id)
+        }
+    )
+
+    db.close()
+
+    return {
+        "access_token": token,
+        "token_type": "bearer"
     }

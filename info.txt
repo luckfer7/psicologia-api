@@ -4,3 +4,7 @@ venv\Scripts\activate = pra ativar o ambiente antes de rodar a api
 uvicorn main:app --reload = roda a api
 
 python -m uvicorn main:app --reload 
+
+nome: lucas
+login: lucas@teste.com
+senha: 123456
