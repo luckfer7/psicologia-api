@@ -20,6 +20,9 @@ from schemas.login import LoginRequest
 from utils.jwt import criar_token
 from utils.seguranca import verificar_senha
 
+from fastapi import Depends
+from utils.autenticacao import get_current_user
+
 from fastapi import HTTPException
 
 from sqlalchemy.orm import joinedload
@@ -35,11 +38,12 @@ def home():
 
 #----------------ENDPOINTS PARA PACIENTES-------------------------------
 @app.get("/pacientes", response_model=list[PacienteResponse])
-def mostrar_pacientes():
+def mostrar_pacientes(usuario=Depends(get_current_user)):
     db = SessionLocal()
 
     pacientes = (
         db.query(Paciente)
+        .filter(Paciente.usuario_id == usuario.id)
         .options(joinedload(Paciente.sessoes))
         .all()
     ) #Por baixo dos panos, é tipo SELECT *FROM pacientes LEFT JOIN sessoes
@@ -50,7 +54,9 @@ def mostrar_pacientes():
 def buscar_paciente(paciente_id: int):
     db = SessionLocal()
 
-    paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
+    paciente = db.query(Paciente).filter(
+        Paciente.id == paciente_id,
+        Paciente.usuario_id == usuario.id).first()
 
     db.close()
 
@@ -76,7 +82,8 @@ def criar_paciente(paciente: PacienteCreate):
         telefone=paciente.telefone,
         email=paciente.email,
         data_nascimento=paciente.data_nascimento,
-        observacoes=paciente.observacoes
+        observacoes=paciente.observacoes,
+        usuario_id=usuario.id
     )
 
     db.add(novo_paciente) #prepara a fila para salvar no banco
