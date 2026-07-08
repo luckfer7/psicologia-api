@@ -96,7 +96,7 @@ def criar_paciente(paciente: PacienteCreate):
 def atualizar_paciente(paciente_id: int, dados: PacienteUpdate):
     db = SessionLocal()
 
-    paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
+    paciente = db.query(Paciente).filter(Paciente.id == paciente_id, Paciente.usuario_id == usuario.id).first()
 
     if not paciente:
         db.close()
