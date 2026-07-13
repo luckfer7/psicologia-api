@@ -21,6 +21,7 @@ from utils.jwt import criar_token
 from utils.seguranca import verificar_senha
 
 from fastapi import Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from utils.autenticacao import get_current_user
 
 from fastapi import HTTPException
@@ -55,13 +56,14 @@ def buscar_paciente(paciente_id: int):
     db = SessionLocal()
 
     paciente = db.query(Paciente).filter(
-        Paciente.id == paciente_id,
-        Paciente.usuario_id == usuario.id).first()
+        Paciente.id == paciente_id
+        ).first()
 
     db.close()
 
     return paciente
 
+#Paciente.usuario_id == usuario.id
 @app.get("/pacientes/{paciente_nome}", response_model=PacienteResponse)
 def buscar_paciente_pelo_nome(paciente_nome: str):
     db = SessionLocal()
@@ -83,7 +85,7 @@ def criar_paciente(paciente: PacienteCreate):
         email=paciente.email,
         data_nascimento=paciente.data_nascimento,
         observacoes=paciente.observacoes,
-        usuario_id=usuario.id
+        # usuario_id=usuario.id
     )
 
     db.add(novo_paciente) #prepara a fila para salvar no banco
@@ -222,12 +224,12 @@ def registrar_usuario(usuario: UsuarioCreate):
 
 #Endpoint de login
 @app.post("/auth/login")
-def login(dados: LoginRequest):
+def login(dados: OAuth2PasswordRequestForm = Depends()):
     db = SessionLocal()
 
     usuario = (
         db.query(Usuario)
-        .filter(Usuario.email == dados.email)
+        .filter(Usuario.email == dados.username)
         .first()
     )
 
@@ -240,7 +242,7 @@ def login(dados: LoginRequest):
         )
     
     senha_valida = verificar_senha(
-        dados.senha,
+        dados.password,
         usuario.senha_hash
     )
 
