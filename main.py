@@ -39,7 +39,7 @@ def home():
 
 #----------------ENDPOINTS PARA PACIENTES-------------------------------
 @app.get("/pacientes", response_model=list[PacienteResponse])
-def mostrar_pacientes(usuario=Depends(get_current_user)):
+def mostrar_pacientes(usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
 
     pacientes = (
