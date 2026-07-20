@@ -52,10 +52,11 @@ def mostrar_pacientes(usuario: Usuario = Depends(get_current_user)):
     return pacientes
 
 @app.get("/pacientes/{paciente_id}", response_model=PacienteResponse)
-def buscar_paciente(paciente_id: int):
+def buscar_paciente(paciente_id: int, usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
 
     paciente = db.query(Paciente).filter(
+        Paciente.usuario_id == usuario.id,
         Paciente.id == paciente_id
         ).first()
 
@@ -65,17 +66,19 @@ def buscar_paciente(paciente_id: int):
 
 #Paciente.usuario_id == usuario.id
 @app.get("/pacientes/{paciente_nome}", response_model=PacienteResponse)
-def buscar_paciente_pelo_nome(paciente_nome: str):
+def buscar_paciente_pelo_nome(paciente_nome: str, usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
 
-    nome_do_paciente = db.query(Paciente).filter(Paciente.nome == paciente_nome).first()
+    nome_do_paciente = db.query(Paciente).filter(
+        Paciente.usuario_id == usuario.id,
+        Paciente.nome == paciente_nome).first()
 
     db.close()
 
     return nome_do_paciente
 
 @app.post("/adicionar_pacientes")
-def criar_paciente(paciente: PacienteCreate):
+def criar_paciente(paciente: PacienteCreate, usuario: Usuario = Depends(get_current_user)):
     #HERDA O PACIENTECREATE E JOGA A CLASSE PRA VARIAVEL EM MINUSCULO
     db = SessionLocal()
 
@@ -85,7 +88,7 @@ def criar_paciente(paciente: PacienteCreate):
         email=paciente.email,
         data_nascimento=paciente.data_nascimento,
         observacoes=paciente.observacoes,
-        # usuario_id=usuario.id
+        usuario_id=usuario.id
     )
 
     db.add(novo_paciente) #prepara a fila para salvar no banco
@@ -95,10 +98,13 @@ def criar_paciente(paciente: PacienteCreate):
     return novo_paciente
 
 @app.put("/pacientes/{paciente_id}")
-def atualizar_paciente(paciente_id: int, dados: PacienteUpdate):
+def atualizar_paciente(paciente_id: int, dados: PacienteUpdate, usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
 
-    paciente = db.query(Paciente).filter(Paciente.id == paciente_id, Paciente.usuario_id == usuario.id).first()
+    paciente = db.query(Paciente).filter(
+        Paciente.usuario_id == usuario.id,
+        Paciente.id == paciente_id, 
+        Paciente.usuario_id == usuario.id).first()
 
     if not paciente:
         db.close()
@@ -119,11 +125,13 @@ def atualizar_paciente(paciente_id: int, dados: PacienteUpdate):
     return paciente
 
 @app.delete("/pacientes/{paciente_id}")
-def deletar_paciente(paciente_id: int):
+def deletar_paciente(paciente_id: int, usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
 
     #Primeiro busca o paciente
-    paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
+    paciente = db.query(Paciente).filter(
+        Paciente.usuario_id == usuario.id,
+        Paciente.id == paciente_id).first()
 
     if not paciente:
         db.close()
@@ -137,10 +145,12 @@ def deletar_paciente(paciente_id: int):
     return {"mensagem": "Paciente deletado com sucesso"}
 
 @app.get("/pacientes/{paciente_id}/sessoes")
-def sessoes_pacientes(paciente_id: int):
+def sessoes_pacientes(paciente_id: int, usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
 
-    sessoes_do_paciente = db.query(Sessao).filter(Sessao.paciente_id == paciente_id).all()
+    sessoes_do_paciente = db.query(Sessao).filter(
+        Paciente.usuario_id == usuario.id,
+        Sessao.paciente_id == paciente_id).all()
 
     db.close()
 
@@ -148,8 +158,20 @@ def sessoes_pacientes(paciente_id: int):
 #---------------------------ENDPOINTS PARA SESSOES---------------------------------
 
 @app.post("/criar_sessao")
-def criar_sessao(sessao: SessaoCreate):
+def criar_sessao(sessao: SessaoCreate, usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
+
+    #verifica-se se o pacinete realmente pertence ao usuario logado
+    paciente = (
+        db.query(Paciente)
+        .filter(
+            Paciente.id == sessao.paciente_id,
+            Paciente.usuario_id == usuario.id
+        )
+        .first()
+    )
+    if not paciente:
+        raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
     nova_sessao = Sessao(
         data_horario=sessao.data_horario,
@@ -157,21 +179,34 @@ def criar_sessao(sessao: SessaoCreate):
         #status=sessao.status,
         status=sessao.status.value,
         #paciente=sessao.paciente_id
-        paciente_id=sessao.paciente_id
-
+        paciente_id=paciente.id
     )
 
     db.add(nova_sessao)
     db.commit()
     db.refresh(nova_sessao)
 
+    db.close()
     return nova_sessao
 
 #------------------------------------------------------------------
 
 @app.post("/anotacoes")
-def criar_anotacao(anotacao: AnotacaoCreate):
+def criar_anotacao(anotacao: AnotacaoCreate, usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
+
+    sessao = (
+        db.query(Sessao)
+        .join(Paciente)
+        .filter(
+            Sessao.id == anotacao.sessao_id,
+            Paciente.usuario_id == usuario.id
+        )
+        .first()
+    )
+    if not sessao:
+        db.close()
+        raise HTTPException(status_code=404, detail="Sessão não encontrada.")
 
     nova_anotacao = Anotacao(
         texto=anotacao.texto,
@@ -189,9 +224,22 @@ def criar_anotacao(anotacao: AnotacaoCreate):
     return nova_anotacao
 
 #Aqui se busca a anotação por sessao
-@app.get("/sessoes/{id}/anotacoes")
-def mostrar_anotacoes(sessao_id: int):
+@app.get("/sessoes/{sessao_id}/anotacoes")
+def mostrar_anotacoes(sessao_id: int, usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
+
+    sessao = (
+        db.query(Sessao)
+        .join(Paciente)
+        .filter(
+            Sessao.id == sessao_id,
+            Paciente.usuario_id == usuario.id
+        )
+        .first()
+    )
+    if not sessao:
+        db.close()
+        raise HTTPException(status_code=404, detail="Sessão não encontrada.")
 
     anotacao = db.query(Anotacao).filter(Anotacao.sessao_id == sessao_id).all()
 
