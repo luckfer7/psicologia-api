@@ -31,7 +31,7 @@ from sqlalchemy.orm import joinedload
 app = FastAPI()
 
 #Aqui, cria-se as tabelas
-Base.metadata.create_all(bind=engine)
+#Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def home():
