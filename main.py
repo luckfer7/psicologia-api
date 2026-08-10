@@ -28,6 +28,8 @@ from fastapi import HTTPException
 
 from sqlalchemy.orm import joinedload
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
 
 #Aqui, cria-se as tabelas
@@ -36,6 +38,16 @@ app = FastAPI()
 @app.get("/")
 def home():
     return {"mensagem": "API rodando!"}
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins= [
+        "http://localhost:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 #----------------ENDPOINTS PARA PACIENTES-------------------------------
 @app.get("/pacientes", response_model=list[PacienteResponse])
