@@ -160,9 +160,10 @@ def deletar_paciente(paciente_id: int, usuario: Usuario = Depends(get_current_us
 def sessoes_pacientes(paciente_id: int, usuario: Usuario = Depends(get_current_user)):
     db = SessionLocal()
 
-    sessoes_do_paciente = db.query(Sessao).filter(
+    sessoes_do_paciente = (db.query(Sessao).join(Paciente).filter(
         Paciente.usuario_id == usuario.id,
         Sessao.paciente_id == paciente_id).all()
+    )
 
     db.close()
 
