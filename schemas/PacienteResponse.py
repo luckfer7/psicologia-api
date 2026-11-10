@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import date
+from decimal import Decimal
 from schemas.SessaoResponse import SessaoResponse
 class PacienteResponse(BaseModel):
     id: int
@@ -10,5 +11,6 @@ class PacienteResponse(BaseModel):
     data_nascimento: Optional [date]
     observacoes: Optional [str]
     sessoes: List[SessaoResponse]
+    valor_sessao: Decimal
     class Config:
         from_attributes = True #Sem isso, o FastAPI não consegue converter o objeto do banco em JSON.
