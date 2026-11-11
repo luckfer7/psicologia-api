@@ -1,5 +1,5 @@
 #data, horario, assunto abordado / anotações
-from sqlalchemy import relationship
+from sqlalchemy.orm import relationship
 from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Numeric
 from database.database import Base
 
@@ -17,6 +17,6 @@ class Sessao (Base):
     )
     pagamentos = relationship(
         "Pagamento",
-        back_populates="Sessao",
+        back_populates="sessao",
         cascade="all, delete-orphan"
     )
