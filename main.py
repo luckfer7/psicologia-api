@@ -7,6 +7,17 @@ from schemas.paciente import PacienteUpdate
 
 from schemas.sessao import SessaoCreate
 from models.sessao import Sessao
+from models.pagamento import Pagamento
+
+from schemas.pagamento import (
+    PagamentoCreate,
+    PagamentoResponse,
+    ResumofinanceiroSessao
+)
+
+from decimal import Decimal
+from sqlalchemy import func
+from datetime import datetime
 
 from schemas.anotacao import AnotacaoCreate
 from models.anotacao import Anotacao
@@ -100,7 +111,9 @@ def criar_paciente(paciente: PacienteCreate, usuario: Usuario = Depends(get_curr
         email=paciente.email,
         data_nascimento=paciente.data_nascimento,
         observacoes=paciente.observacoes,
-        usuario_id=usuario.id
+        usuario_id=usuario.id,
+        status=paciente.status,
+        valor_sessao=paciente.valor_sessao
     )
 
     db.add(novo_paciente) #prepara a fila para salvar no banco
@@ -192,7 +205,8 @@ def criar_sessao(sessao: SessaoCreate, usuario: Usuario = Depends(get_current_us
         #status=sessao.status,
         status=sessao.status.value,
         #paciente=sessao.paciente_id
-        paciente_id=paciente.id
+        paciente_id=paciente.id,
+        valor_cobrado=paciente.valor_sessao
     )
 
     db.add(nova_sessao)
@@ -327,3 +341,83 @@ def login(dados: OAuth2PasswordRequestForm = Depends()):
         "access_token": token,
         "token_type": "bearer"
     }
+
+#---------------------------ENDPOINTS PARA FINANCEIRO---------------------------------
+
+@app.post("/pagamentos", response_model=PagamentoResponse)
+def registrar_pagamento(
+    dados: PagamentoCreate,
+    db: Sessao = Depends(get_db),
+    usuario = Depends(get_current_user)
+):
+    sessao = db.query(Sessao).join(Paciente).filter(
+        Sessao.id == dados.sessao_id,
+        Paciente.usuario_id == usuario.id
+    ).first()
+
+    if not sessao:
+        raise HTTPException(
+            status_code=404,
+            detail="Sessão não encontrada"
+        )
+
+    if sessao.status != "realizada":
+        raise HTTPException(
+            status_code=400,
+            detail="Só é possível registrar pagamentos de sessões realizada"
+        )
+
+    total_pago = db.query(
+        func.coalesce(func.sum(Pagamento.valor), 0)
+    ).filter(
+        Pagamento.sessao_id == sessao.id
+    ).scalar()
+
+    saldo = Decimal(str(sessao.valor_cobrado)) - Decimal(str(total_pago))
+
+    if dados.valor > saldo:
+        raise HTTPException(
+            status_code=400,
+            detail="O pagamento não pode ser maior que o saldo pendente"
+        )
+
+    pagamento = Pagamento(
+        sessao_id=sessao.id,
+        valor=dados.valor,
+        forma_pagamento=dados.forma_pagamento,
+        observacao=dados.observacao
+    )
+
+    db.add(pagamento)
+    db.commit()
+    db.refresh(pagamento)
+
+    return pagamento
+
+@app.get("/sessoes/{sessao_id}/pagamentos", response_model=list[PagamentoResponse])
+def listar_pagamentos_sessao(
+    sessao_id: int,
+    db: Sessao = Depends(get_db),
+    usuario = Depends(get_current_user)
+):
+    sessao = db.query(Sessao).join(Paciente).filter(
+        Sessao.id == sessao_id,
+        Paciente.usuario_id == usuario.id
+    ).first()
+
+    if not sessao:
+        raise HTTPException(
+            status_code=404,
+            detail="Sessão não encontrada"
+        )
+
+    return db.query(Pagamento).filter(
+        Pagamento.sessao_id == sessao_id
+    ).order_by(Pagamento.data_pagamento.desc()).all()
+
+@app.get("/financeiro/pendentes")
+def listar_sessoes_pendentes(
+    db: Sessao = Depends(get_db),
+    usuario = Depends(get_current_user)
+):
+    
