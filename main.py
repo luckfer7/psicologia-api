@@ -420,4 +420,110 @@ def listar_sessoes_pendentes(
     db: Sessao = Depends(get_db),
     usuario = Depends(get_current_user)
 ):
-    
+    sessoes = db.query(Sessao).join(Paciente).filter(
+        Paciente.usuario_id == usuario.id,
+        Sessao.status == "realizada"
+    ).all()
+
+    resultado = []
+
+    for sessao in sessoes:
+        total_pago = db.query(
+            func.coalesce(func.sum(Pagamento.valor), 0)
+        ).filter(
+            Pagamento.sessao_id == sessao.id
+        ).scalar()
+
+        valor = Decimal(str(sessao.valor_cobrado or 0))
+        recebido = Decimal(str(total_pago or 0))
+        saldo = valor - recebido
+
+        if saldo > 0:
+            resultado.append({
+                "sessao_id": sessao.id,
+                "paciente_id": sessao.paciente_id,
+                "paciente_nome": sessao.paciente.nome,
+                "data_horario": sessao.data_horario,
+                "valor_cobrado": valor,
+                "total_pago": recebido,
+                "saldo_pendente": saldo,
+                "status_financeiro": (
+                    "parcial" if recebido > 0 else "pendente"
+                )
+            })
+        return resultado
+
+@app.get("/financeiro/resumo")
+def resumo_financeiro(
+    db: Sessao = Depends(get_db),
+    usuario = Depends(get_current_user)
+):
+    agora = datetime.now()
+
+    inicio_mes = agora.replace(
+        day=1,
+        hour=0,
+        minute=0,
+        second=0,
+        microsecond=0
+    )
+
+    pagamentos = db.query(Pagamento).join(
+        Sessao
+    ).join(
+        Paciente
+    ).filter(
+        Paciente.usuario_id == usuario.id,
+        Pagamento.data_pagamento >= inicio_mes
+    ).all()
+
+    recebido_mes = sum(
+        (Decimal(str(p.valor)) for p in pagamentos),
+        Decimal("0.00")
+    )
+
+    sessoes_pendentes = listar_sessoes_pendentes(
+        db=db,
+        usuario=usuario
+    )
+
+    total_pendente = sum(
+        (
+            item["saldo_pendente"]
+            for item in sessoes_pendentes
+        ),
+        Decimal("0.00")
+    )
+
+    return {
+        "recebido_mes": recebido_mes,
+        "total_pendente": total_pendente,
+        "quantidade_pendentes": len(sessoes_pendentes)
+    }
+
+@app.get("/financeiro/historico")
+def historico_pagamentos(
+    db: Sessao = Depends(get_db),
+    usuario = Depends(get_current_user)
+): 
+    pagamentos = db.query(Pagamento).join(
+        Sessao
+    ).join(
+        Paciente
+    ).filter(
+        Paciente.usuario_id == usuario.id
+    ).order_by(
+        Pagamento.data_pagamento.desc()
+    ).all()
+
+    return [
+        {
+            "id": p.id,
+            "sessao_id": p.sessao_id,
+            "paciente": p.sessao.paciente.nome,
+            "valor": p.valor,
+            "forma_pagamento": p.forma_pagamento,
+            "data_pagamento": p.data_pagamento
+        }
+        for p in pagamentos
+    ]
