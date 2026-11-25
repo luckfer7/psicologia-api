@@ -39,6 +39,6 @@ class PagamentoForma (str, Enum):
     credito = "credito"
     debito = "debito"
 
-class PagamentoStatus (bool):
+class PagamentoStatus (str, Enum):
     pago = "pago"
     pendente = "pendente"

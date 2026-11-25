@@ -11,5 +11,13 @@ SessionLocal = sessionmaker(bind=engine)
 
 Base = declarative_base()
 
+def get_db():
+    db = SessionLocal()
+
+    try:
+        yield db
+    finally:
+        db.close()
+
 #aqui, cria-se o banco psicologia.db
 #Define-se a base dos modelos

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from database.database import engine, Base, SessionLocal
+from database.database import engine, Base, SessionLocal, get_db
 from models.paciente import Paciente
 from schemas.paciente import PacienteCreate
 from schemas.PacienteResponse import PacienteResponse
@@ -37,6 +37,7 @@ from utils.autenticacao import get_current_user
 
 from fastapi import HTTPException
 
+from sqlalchemy import Session
 from sqlalchemy.orm import joinedload
 
 from fastapi.middleware.cors import CORSMiddleware
@@ -347,7 +348,7 @@ def login(dados: OAuth2PasswordRequestForm = Depends()):
 @app.post("/pagamentos", response_model=PagamentoResponse)
 def registrar_pagamento(
     dados: PagamentoCreate,
-    db: Sessao = Depends(get_db),
+    db: Session = Depends(get_db),
     usuario = Depends(get_current_user)
 ):
     sessao = db.query(Sessao).join(Paciente).filter(
@@ -383,6 +384,7 @@ def registrar_pagamento(
 
     pagamento = Pagamento(
         sessao_id=sessao.id,
+        paciente_id=sessao.paciente_id,
         valor=dados.valor,
         forma_pagamento=dados.forma_pagamento,
         observacao=dados.observacao
@@ -397,7 +399,7 @@ def registrar_pagamento(
 @app.get("/sessoes/{sessao_id}/pagamentos", response_model=list[PagamentoResponse])
 def listar_pagamentos_sessao(
     sessao_id: int,
-    db: Sessao = Depends(get_db),
+    db: Session = Depends(get_db),
     usuario = Depends(get_current_user)
 ):
     sessao = db.query(Sessao).join(Paciente).filter(
@@ -417,7 +419,7 @@ def listar_pagamentos_sessao(
 
 @app.get("/financeiro/pendentes")
 def listar_sessoes_pendentes(
-    db: Sessao = Depends(get_db),
+    db: Session = Depends(get_db),
     usuario = Depends(get_current_user)
 ):
     sessoes = db.query(Sessao).join(Paciente).filter(
@@ -451,11 +453,12 @@ def listar_sessoes_pendentes(
                     "parcial" if recebido > 0 else "pendente"
                 )
             })
-        return resultado
+    
+    return resultado
 
 @app.get("/financeiro/resumo")
 def resumo_financeiro(
-    db: Sessao = Depends(get_db),
+    db: Session = Depends(get_db),
     usuario = Depends(get_current_user)
 ):
     agora = datetime.now()
@@ -503,7 +506,7 @@ def resumo_financeiro(
 
 @app.get("/financeiro/historico")
 def historico_pagamentos(
-    db: Sessao = Depends(get_db),
+    db: Session = Depends(get_db),
     usuario = Depends(get_current_user)
 ): 
     pagamentos = db.query(Pagamento).join(
