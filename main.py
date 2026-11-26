@@ -37,7 +37,7 @@ from utils.autenticacao import get_current_user
 
 from fastapi import HTTPException
 
-from sqlalchemy import Session
+from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 
 from fastapi.middleware.cors import CORSMiddleware
