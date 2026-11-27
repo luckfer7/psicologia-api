@@ -1,0 +1,11 @@
+fastapi==0.136.1
+uvicorn==0.46.0
+pydantic==2.13.3
+SQLAlchemy==2.0.51
+alembic==1.18.5
+python-jose==3.5.0
+python-multipart==0.0.32
+passlib==1.7.4
+bcrypt==5.0.0
+greenlet==3.5.4
+psycopg[binary]>=3.2,<4
